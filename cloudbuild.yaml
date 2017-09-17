@@ -1,0 +1,18 @@
+steps:
+- name: 'gcr.io/cloud-builders/gsutil'
+  args: ['cp', 'gs://metal-tile-dev1-go-lib/src.tar.gz', '.']
+- name: 'ubuntu'
+  args: ['mkdir', '-p', './gopath']
+- name: 'ubuntu'
+  args: ['tar', '-zxvf', 'src.tar.gz', '-C', './gopath']
+- name: 'gcr.io/cloud-builders/go'
+  args: ['install', '-a', '-ldflags', "'-s'", '-installsuffix', 'cgo', 'github.com/metal-tile/godeye']
+  env: [
+    'PROJECT_ROOT=github.com/metal-tile/godeye',
+    'CGO_ENABLED=0',
+    'GOOS=linux'
+  ]
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '--tag=gcr.io/$PROJECT_ID/metal-tile/godeye', '.']
+
+images: ['gcr.io/$PROJECT_ID/metal-tile/godeye']
