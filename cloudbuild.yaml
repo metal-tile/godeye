@@ -13,6 +13,6 @@ steps:
     'GOOS=linux'
   ]
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '--tag=gcr.io/$PROJECT_ID/metal-tile/godeye', '.']
+  args: ['build', '--tag=gcr.io/$PROJECT_ID/metal-tile/godeye/$BRANCH_NAME:$COMMIT_SHA', '.']
 
-images: ['gcr.io/$PROJECT_ID/metal-tile/godeye']
+images: ['gcr.io/$PROJECT_ID/metal-tile/godeye/$BRANCH_NAME:$COMMIT_SHA']
