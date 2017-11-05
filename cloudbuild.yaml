@@ -1,10 +1,13 @@
 steps:
-- name: 'gcr.io/cloud-builders/gsutil'
-  args: ['cp', 'gs://metal-tile-dev1-go-lib/src.tar.gz', '.']
-- name: 'ubuntu'
-  args: ['mkdir', '-p', './gopath']
-- name: 'ubuntu'
-  args: ['tar', '-zxf', 'src.tar.gz', '-C', './gopath']
+- name: 'gcr.io/cloud-builders/go'
+  args: ['get', './...']
+  env: ['PROJECT_ROOT=github.com/metal-tile/godeye']
+- name: 'gcr.io/cloud-builders/go'
+  args: ['generate']
+  env: ['PROJECT_ROOT=github.com/metal-tile/godeye']
+- name: 'gcr.io/cloud-builders/go'
+  args: ['test', '.']
+  env: ['PROJECT_ROOT=github.com/metal-tile/godeye']
 - name: 'gcr.io/cloud-builders/go'
   args: ['install', '-a', '-ldflags', "'-s'", '-installsuffix', 'cgo', 'github.com/metal-tile/godeye']
   env: [

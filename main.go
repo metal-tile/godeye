@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"gocloud-exp/firestore"
+	"cloud.google.com/go/firestore"
 
 	"google.golang.org/api/iterator"
 
@@ -48,17 +48,23 @@ func main() {
 						Map: map[string]PlayerPosition{},
 					}
 
-					p, err := getPlayerPositions(ProjectID)
+					p, err := getPlayerPositions(log, ProjectID)
 					if err != nil {
 						log.Errorf("failed getPlayerPositions from Firestore. err = %s", err.Error())
 					}
 					ppm.Map = p
 					b := ppm.existActivePlayer()
+					if b {
+						// TODO Run Land Container
+						log.Info("Start Container")
+					} else {
+						// TODO Stop Land Conainer
+						log.Info("Stop Container")
+					}
 				}(&log)
 				log.Flush()
 			}
 		}
-
 	}
 }
 
