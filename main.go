@@ -54,11 +54,17 @@ func main() {
 					}
 					ppm.Map = p
 					b := ppm.existActivePlayer()
+					if b {
+						// TODO Run Land Container
+						log.Info("Start Container")
+					} else {
+						// TODO Stop Land Conainer
+						log.Info("Stop Container")
+					}
 				}(&log)
 				log.Flush()
 			}
 		}
-
 	}
 }
 
