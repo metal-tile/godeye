@@ -31,6 +31,28 @@ func updatePod() error {
 	}
 
 	{
+		rsl, err := clientset.AppsV1beta2().ReplicaSets("").List(metav1.ListOptions{})
+		if err != nil {
+
+		}
+		fmt.Printf("There are %d ReplicaSet in the cluster\n", len(rsl.Items))
+		for _, item := range rsl.Items {
+			fmt.Printf("ReplicaSet %s exists. \n", item.Name)
+		}
+	}
+
+	{
+		dl, err := clientset.AppsV1beta2().Deployments("").List(metav1.ListOptions{})
+		if err != nil {
+
+		}
+		fmt.Printf("There are %d Deployments in the cluster\n", len(dl.Items))
+		for _, item := range dl.Items {
+			fmt.Printf("Deployments %s exists. \n", item.Name)
+		}
+	}
+
+	{
 		rcl, err := clientset.CoreV1().ReplicationControllers("").List(metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "ReplicationControllers.List")
