@@ -38,7 +38,7 @@ func (ppm *PlayerPositionManager) existActivePlayer() bool {
 func main() {
 	err := updatePod()
 	if err != nil {
-		fmt.Printf("%+v", err)
+		fmt.Printf("error:%+v", err)
 	}
 
 	for {
