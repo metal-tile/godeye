@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func updatePod() error {
+func updatePod(replicas int32) error {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return errors.Wrap(err, "failed rest.InClusterConfig")
@@ -19,64 +19,19 @@ func updatePod() error {
 		return errors.Wrap(err, "failed kubernetes.NewForConfig")
 	}
 
-	{
-		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
-		if err != nil {
-			return errors.Wrap(err, "failed Pod.List")
-		}
-		fmt.Printf("There are %d Pod in the cluster\n", len(pods.Items))
-		for _, item := range pods.Items {
-			fmt.Printf("Pod %s exists.\n", item.Name)
-		}
+	land, err := clientset.AppsV1beta2().Deployments("default").Get("land-node", metav1.GetOptions{})
+	if err != nil {
+		fmt.Printf("failed get Deployment %+v\n", err)
+		return errors.Wrap(err, "failed get land deployment")
 	}
-
-	{
-		rsl, err := clientset.AppsV1beta2().ReplicaSets("").List(metav1.ListOptions{})
-		if err != nil {
-			return errors.Wrap(err, "failed ReplicaSet.List")
-		}
-		fmt.Printf("There are %d ReplicaSet in the cluster\n", len(rsl.Items))
-		for _, item := range rsl.Items {
-			fmt.Printf("ReplicaSet %s exists. \n", item.Name)
-		}
+	land.Spec.Replicas = &replicas
+	fmt.Printf("land Deployment %v\n", land)
+	ug, err := clientset.AppsV1beta2().Deployments(land.Namespace).Update(land)
+	if err != nil {
+		fmt.Printf("failed update Deployment %+v", err)
+		return errors.Wrap(err, "failed update Deployment")
 	}
-
-	{
-		dl, err := clientset.AppsV1beta2().Deployments("").List(metav1.ListOptions{})
-		if err != nil {
-			return errors.Wrap(err, "failed Deployment.List")
-		}
-		fmt.Printf("There are %d Deployments in the cluster\n", len(dl.Items))
-		for _, item := range dl.Items {
-			fmt.Printf("Deployments name:%s,namespace=%s exists. \n", item.Name, item.Namespace)
-		}
-		land, err := clientset.AppsV1beta2().Deployments("default").Get("land-node", metav1.GetOptions{})
-		if err != nil {
-			fmt.Printf("failed get Deployment %+v\n", err)
-			return errors.Wrap(err, "failed get land deployment")
-		}
-		var replicas int32
-		replicas = 0
-		land.Spec.Replicas = &replicas
-		fmt.Printf("land Deployment %v\n", land)
-		ug, err := clientset.AppsV1beta2().Deployments(land.Namespace).Update(land)
-		if err != nil {
-			fmt.Printf("failed update Deployment %+v", err)
-			return errors.Wrap(err, "failed update Deployment")
-		}
-		fmt.Printf("done update deployment %v\n", ug)
-	}
-
-	{
-		rcl, err := clientset.CoreV1().ReplicationControllers("").List(metav1.ListOptions{})
-		if err != nil {
-			return errors.Wrap(err, "failed ReplicationControllers.List")
-		}
-		fmt.Printf("There are %d ReplicationController in the cluster\n", len(rcl.Items))
-		for _, item := range rcl.Items {
-			fmt.Printf("ReplicationController %s is size = %d\n", item.Name, item.Size())
-		}
-	}
+	fmt.Printf("done update deployment %v\n", ug)
 
 	return nil
 }
