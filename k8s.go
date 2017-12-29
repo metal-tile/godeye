@@ -59,9 +59,10 @@ func updatePod() error {
 		fmt.Printf("land Deployment %v", land)
 		ug, err := clientset.AppsV1beta2().Deployments(land.Namespace).Update(land)
 		if err != nil {
-			return errors.Wrap(err, "Update Deployment")
+			fmt.Printf("failed update Deployment %+v", err)
+			return errors.Wrap(err, "failed update Deployment")
 		}
-		fmt.Printf("Updated Deployment %v", ug)
+		fmt.Printf("done update deployment %v", ug)
 	}
 
 	{
