@@ -44,19 +44,20 @@ func updatePod() error {
 	{
 		dl, err := clientset.AppsV1beta2().Deployments("").List(metav1.ListOptions{})
 		if err != nil {
-
+			return errors.Wrap(err, "failed Deployment.List")
 		}
 		fmt.Printf("There are %d Deployments in the cluster\n", len(dl.Items))
 		for _, item := range dl.Items {
 			fmt.Printf("Deployments %s exists. \n", item.Name)
 		}
-		godeye, err := clientset.AppsV1beta2().Deployments("").Get("godeye-node", metav1.GetOptions{})
+		land, err := clientset.AppsV1beta2().Deployments("").Get("land-node", metav1.GetOptions{})
 		if err != nil {
-			return errors.Wrap(err, "failed get godeye deployment")
+			fmt.Printf("failed get Deployment %+v", err)
+			return errors.Wrap(err, "failed get land deployment")
 		}
-		godeye.Status.Replicas = 0
-		fmt.Printf("godeye Deployment %v", godeye)
-		ug, err := clientset.AppsV1beta2().Deployments("").Update(godeye)
+		land.Status.Replicas = 0
+		fmt.Printf("land Deployment %v", land)
+		ug, err := clientset.AppsV1beta2().Deployments("").Update(land)
 		if err != nil {
 			return errors.Wrap(err, "Update Deployment")
 		}
