@@ -52,17 +52,19 @@ func updatePod() error {
 		}
 		land, err := clientset.AppsV1beta2().Deployments("default").Get("land-node", metav1.GetOptions{})
 		if err != nil {
-			fmt.Printf("failed get Deployment %+v", err)
+			fmt.Printf("failed get Deployment %+v\n", err)
 			return errors.Wrap(err, "failed get land deployment")
 		}
-		land.Status.Replicas = 0
-		fmt.Printf("land Deployment %v", land)
+		var replicas int32
+		replicas = 0
+		land.Spec.Replicas = &replicas
+		fmt.Printf("land Deployment %v\n", land)
 		ug, err := clientset.AppsV1beta2().Deployments(land.Namespace).Update(land)
 		if err != nil {
 			fmt.Printf("failed update Deployment %+v", err)
 			return errors.Wrap(err, "failed update Deployment")
 		}
-		fmt.Printf("done update deployment %v", ug)
+		fmt.Printf("done update deployment %v\n", ug)
 	}
 
 	{
