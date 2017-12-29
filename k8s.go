@@ -19,13 +19,26 @@ func updatePod() error {
 		return errors.Wrap(err, "kubernetes.NewForConfig")
 	}
 
-	rcl, err := clientset.CoreV1().ReplicationControllers("").List(metav1.ListOptions{})
-	if err != nil {
-		return errors.Wrap(err, "ReplicationControllers.List")
+	{
+		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+		if err != nil {
+			return errors.Wrap(err, "Pod.List")
+		}
+		fmt.Printf("There are %d Pod in the cluster\n", len(pods.Items))
+		for _, item := range pods.Items {
+			fmt.Printf("Pod %s exists.\n", item.Name)
+		}
 	}
-	fmt.Printf("There are %d ReplicationController in the cluster\n", len(rcl.Items))
-	for _, item := range rcl.Items {
-		fmt.Printf("ReplicationController %s is size = %d", item.Name, item.Size())
+
+	{
+		rcl, err := clientset.CoreV1().ReplicationControllers("").List(metav1.ListOptions{})
+		if err != nil {
+			return errors.Wrap(err, "ReplicationControllers.List")
+		}
+		fmt.Printf("There are %d ReplicationController in the cluster\n", len(rcl.Items))
+		for _, item := range rcl.Items {
+			fmt.Printf("ReplicationController %s is size = %d\n", item.Name, item.Size())
+		}
 	}
 
 	return nil
