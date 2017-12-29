@@ -50,14 +50,14 @@ func updatePod() error {
 		for _, item := range dl.Items {
 			fmt.Printf("Deployments name:%s,namespace=%s exists. \n", item.Name, item.Namespace)
 		}
-		land, err := clientset.AppsV1beta2().Deployments("").Get("land-node", metav1.GetOptions{})
+		land, err := clientset.AppsV1beta2().Deployments("default").Get("land-node", metav1.GetOptions{})
 		if err != nil {
 			fmt.Printf("failed get Deployment %+v", err)
 			return errors.Wrap(err, "failed get land deployment")
 		}
 		land.Status.Replicas = 0
 		fmt.Printf("land Deployment %v", land)
-		ug, err := clientset.AppsV1beta2().Deployments("").Update(land)
+		ug, err := clientset.AppsV1beta2().Deployments(land.Namespace).Update(land)
 		if err != nil {
 			return errors.Wrap(err, "Update Deployment")
 		}
