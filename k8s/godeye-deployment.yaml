@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    name: godeye-node
+  name: godeye-node
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: godeye-node
+    spec:
+      containers:
+      - image: gcr.io/metal-tile-dev1/metal-tile/godeye/feature/id/7:2b0dc38877b1ae4ad09c8ef8041cef67e2cc20b4
+        name: godeye-node
