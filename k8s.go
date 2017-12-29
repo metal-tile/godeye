@@ -48,7 +48,7 @@ func updatePod() error {
 		}
 		fmt.Printf("There are %d Deployments in the cluster\n", len(dl.Items))
 		for _, item := range dl.Items {
-			fmt.Printf("Deployments %s exists. \n", item.Name)
+			fmt.Printf("Deployments name:%s,namespace=%s exists. \n", item.Name, item.Namespace)
 		}
 		land, err := clientset.AppsV1beta2().Deployments("").Get("land-node", metav1.GetOptions{})
 		if err != nil {
