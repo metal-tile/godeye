@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func updatePod(replicas int32) error {
+func updateReplicas(namespace string, name string, replicas int32) error {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return errors.Wrap(err, "failed rest.InClusterConfig")
@@ -19,14 +19,14 @@ func updatePod(replicas int32) error {
 		return errors.Wrap(err, "failed kubernetes.NewForConfig")
 	}
 
-	land, err := clientset.AppsV1beta2().Deployments("default").Get("land-node", metav1.GetOptions{})
+	deployment, err := clientset.AppsV1beta2().Deployments(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		fmt.Printf("failed get Deployment %+v\n", err)
-		return errors.Wrap(err, "failed get land deployment")
+		return errors.Wrap(err, "failed get deployment")
 	}
-	land.Spec.Replicas = &replicas
-	fmt.Printf("land Deployment %v\n", land)
-	ug, err := clientset.AppsV1beta2().Deployments(land.Namespace).Update(land)
+	deployment.Spec.Replicas = &replicas
+	fmt.Printf("Deployment %v\n", deployment)
+	ug, err := clientset.AppsV1beta2().Deployments(deployment.Namespace).Update(deployment)
 	if err != nil {
 		fmt.Printf("failed update Deployment %+v", err)
 		return errors.Wrap(err, "failed update Deployment")
