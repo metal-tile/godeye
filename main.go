@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"cloud.google.com/go/firestore"
-
-	"google.golang.org/api/iterator"
-
 	"github.com/sinmetal/slog"
+	"google.golang.org/api/iterator"
 )
 
 // ProjectID is GCP Project ID
@@ -37,6 +36,11 @@ func (ppm *PlayerPositionManager) existActivePlayer() bool {
 }
 
 func main() {
+	err := updatePod()
+	if err != nil {
+		fmt.Printf("%+v", err)
+	}
+
 	for {
 		t := time.NewTicker(5 * time.Minute)
 		for {
