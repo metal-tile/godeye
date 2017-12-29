@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"k8s.io/api/apps/v1beta2"
+	apiv1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -33,7 +35,7 @@ func updatePod() error {
 	{
 		rsl, err := clientset.AppsV1beta2().ReplicaSets("").List(metav1.ListOptions{})
 		if err != nil {
-
+			return errors.Wrap(err, "ReplicaSet.List")
 		}
 		fmt.Printf("There are %d ReplicaSet in the cluster\n", len(rsl.Items))
 		for _, item := range rsl.Items {
@@ -50,6 +52,18 @@ func updatePod() error {
 		for _, item := range dl.Items {
 			fmt.Printf("Deployments %s exists. \n", item.Name)
 		}
+		d, err := clientset.AppsV1beta2().Deployments("").Update(&v1beta2.Deployment{
+			ObjectMeta: apiv1.ObjectMeta{
+				Name: "godeye-node",
+			},
+			Status: v1beta2.DeploymentStatus{
+				Replicas: 0,
+			},
+		})
+		if err != nil {
+			return errors.Wrap(err, "Update Deployment")
+		}
+		fmt.Printf("Updated Deployment %v", d)
 	}
 
 	{
