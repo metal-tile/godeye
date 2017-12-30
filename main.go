@@ -141,7 +141,7 @@ func watchActivePlayer(manager PlayerPositionManager) error {
 					}
 
 					log.Infof("try update land replica size = %d", replicas)
-					err := updateReplicas("default", "land", replicas)
+					err := updateReplicas("default", "land-node", replicas)
 					if err != nil {
 						log.Errorf("failed update land replica size. %+v", err)
 						log.Flush()
