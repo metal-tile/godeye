@@ -1,8 +1,5 @@
 steps:
 - name: 'gcr.io/cloud-builders/go'
-  args: ['get', './...']
-  env: ['PROJECT_ROOT=github.com/metal-tile/godeye']
-- name: 'gcr.io/cloud-builders/go'
   args: ['generate']
   env: ['PROJECT_ROOT=github.com/metal-tile/godeye']
 - name: 'gcr.io/cloud-builders/go'
