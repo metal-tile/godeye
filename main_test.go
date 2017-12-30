@@ -24,8 +24,8 @@ func TestPlayerPositionManager_ExistActivePlayer(t *testing.T) {
 			UpdatedAt: v.in,
 		})
 
-		if manager.ExistActivePlayer() == v.want {
-			t.Fatalf("unexpected existActivePlayer. index = %d", i)
+		if e, g := v.want, manager.ExistActivePlayer(); e != g {
+			t.Fatalf("expected existActivePlayer %t; got %t. index = %d", e, g, i)
 		}
 	}
 }
