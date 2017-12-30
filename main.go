@@ -140,8 +140,18 @@ func watchActivePlayer(manager PlayerPositionManager) error {
 						replicas = 1
 					}
 
+					ds, err := listDeployment()
+					if err != nil {
+						log.Errorf("failed list replica. %+v", err)
+						log.Flush()
+						continue
+					}
+					for _, d := range ds {
+						log.Infof("Deployment %s, namespace = %s", d.Name, d.Namespace)
+					}
+
 					log.Infof("try update land replica size = %d", replicas)
-					err := updateReplicas("default", "land-node", replicas)
+					err = updateReplicas("default", "land-node", replicas)
 					if err != nil {
 						log.Errorf("failed update land replica size. %+v", err)
 						log.Flush()

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"k8s.io/api/apps/v1beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -34,4 +35,22 @@ func updateReplicas(namespace string, name string, replicas int32) error {
 	fmt.Printf("done update deployment %v\n", ug)
 
 	return nil
+}
+
+func listDeployment() ([]v1beta2.Deployment, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed rest.InClusterConfig")
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed kubernetes.NewForConfig")
+	}
+
+	ds, err := clientset.AppsV1beta2().Deployments("").List(metav1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed list Deployment")
+	}
+
+	return ds.Items, nil
 }
