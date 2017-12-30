@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -96,13 +97,21 @@ type PlayerPosition struct {
 }
 
 func main() {
+	ctx := context.Background()
+	err := firedb.SetUp(ctx, ProjectID)
+	if err != nil {
+		fmt.Printf("%+v", err)
+		os.Exit(1)
+		return
+	}
+
 	ppm := NewPlayerPositionManager()
 	ch := make(chan error)
 	go func() {
 		ch <- watchActivePlayer(ppm)
 	}()
 
-	err := <-ch
+	err = <-ch
 	fmt.Println(err.Error())
 }
 
