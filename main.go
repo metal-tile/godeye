@@ -97,8 +97,16 @@ type PlayerPosition struct {
 }
 
 func main() {
+	ds, err := listDeployment()
+	if err != nil {
+		fmt.Printf("failed list replica. %+v\n", err)
+	}
+	for _, d := range ds {
+		fmt.Printf("Deployment %s, namespace = %s\n", d.Name, d.Namespace)
+	}
+
 	ctx := context.Background()
-	err := firedb.SetUp(ctx, ProjectID)
+	err = firedb.SetUp(ctx, ProjectID)
 	if err != nil {
 		fmt.Printf("%+v", err)
 		os.Exit(1)
