@@ -441,8 +441,8 @@
     "util/flowcontrol",
     "util/integer"
   ]
-  revision = "78700dec6369ba22221b72770783300f143df150"
-  version = "v6.0.0"
+  revision = "d79b7d1f8bc2b1a2393aa7d79f4365413fd39a8c"
+  version = "master"
 
 [[projects]]
   branch = "master"
@@ -453,6 +453,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c4522ebf40e928d55d0a20ebc4c6178d67a1b02e087137e811dabc702cf2b3b7"
+  inputs-digest = "4b0c4aa26e42628950d5595c64f609143602f591d7734ed185e48f522e985f24"
   solver-name = "gps-cdcl"
   solver-version = 1
