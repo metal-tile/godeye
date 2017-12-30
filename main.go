@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
-	"cloud.google.com/go/firestore"
+	"github.com/metal-tile/godeye/firedb"
 	"github.com/sinmetal/slog"
-	"google.golang.org/api/iterator"
 )
 
 // ProjectID is GCP Project ID
@@ -15,92 +16,140 @@ const ProjectID = "metal-tile-dev1"
 
 // PlayerPositionManager is PlayerのPositionを管理するもの
 type PlayerPositionManager struct {
-	Map map[string]PlayerPosition
+	Map *sync.Map
+}
+
+// NewPlayerPositionManager is PlayerPositionManagerを作成
+func NewPlayerPositionManager() PlayerPositionManager {
+	return PlayerPositionManager{
+		Map: &sync.Map{},
+	}
+}
+
+// Load is Load from PlayerPosition
+func (manager *PlayerPositionManager) Load(key string) (playerPosition *PlayerPosition, ok bool) {
+	v, ok := manager.Map.Load(key)
+	if ok {
+		return v.(*PlayerPosition), ok
+	}
+	return nil, ok
+}
+
+// Store is Store to PlayerPosition
+func (manager *PlayerPositionManager) Store(key string, playerPosition *PlayerPosition) {
+	manager.Map.Store(key, playerPosition)
+}
+
+// SetPlayerPositionMap is Update PlayerPositionMap
+// Firestoreから取得したPlayerPositionを保持する
+// 状態が変わっているものはUpdatedAtを更新して保存する
+// TODO 減ってるプレイヤーがある場合の考慮が必要か？
+func (manager *PlayerPositionManager) SetPlayerPositionMap(pps []*firedb.PlayerPosition) {
+	for _, v := range pps {
+		cpp, ok := manager.Load(v.ID)
+		if ok {
+			if cpp.X == v.X && cpp.Y == v.Y {
+				continue
+			}
+			cpp.Angle = v.Angle
+			cpp.IsMove = v.IsMove
+			cpp.X = v.X
+			cpp.Y = v.Y
+			cpp.UpdatedAt = Now()
+			manager.Store(v.ID, cpp)
+		} else {
+			manager.Store(v.ID, &PlayerPosition{
+				ID:        v.ID,
+				Angle:     v.Angle,
+				IsMove:    v.IsMove,
+				X:         v.X,
+				Y:         v.Y,
+				UpdatedAt: Now(),
+			})
+		}
+	}
+
+}
+
+// ExistActivePlayer is ActiveなPlayerが存在するかのチェック
+func (manager *PlayerPositionManager) ExistActivePlayer() bool {
+	exist := false
+	manager.Map.Range(func(key interface{}, value interface{}) bool {
+		if value.(*PlayerPosition).UpdatedAt.After(Now().Add(time.Minute * -18)) {
+			exist = true
+			return false
+		}
+		return true
+	})
+
+	return exist
 }
 
 // PlayerPosition is Firestoreの/world-{worldname}-player-positionのデータを入れるstruct
 type PlayerPosition struct {
-	ID        string
-	X         float64
-	Y         float64
-	UpdatedAt time.Time
-}
-
-func (ppm *PlayerPositionManager) existActivePlayer() bool {
-	for _, v := range ppm.Map {
-		if v.UpdatedAt.After(time.Now().Add(time.Minute * -18)) {
-			return true
-		}
-	}
-	return false
+	ID        string    `firestore:"-" json:"id"`
+	Angle     float64   `json:"angle"`
+	IsMove    bool      `json:"isMove"`
+	X         float64   `json:"x"`
+	Y         float64   `json:"y"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func main() {
-	err := updateReplicas("default", "land", 0)
-	if err != nil {
-		fmt.Printf("error:%+v\n", err)
-	}
+	ppm := NewPlayerPositionManager()
+	ch := make(chan error)
+	go func() {
+		ch <- watchActivePlayer(ppm)
+	}()
 
+	err := <-ch
+	fmt.Println(err.Error())
+}
+
+func watchActivePlayer(manager PlayerPositionManager) error {
+	existActivePlayer := false
+	playerStore := firedb.NewPlayerStore()
 	for {
-		t := time.NewTicker(5 * time.Minute)
+		t := time.NewTicker(1 * time.Minute)
 		for {
 			select {
 			case <-t.C:
 				log := slog.Start(time.Now())
-				go func(log *slog.Log) {
-					ppm := PlayerPositionManager{
-						Map: map[string]PlayerPosition{},
+				ctx := context.Background()
+				pps, err := playerStore.GetPlayerPositions(ctx)
+				if err != nil {
+					log.Errorf("playerStore.GetPlayerPositions. %s", err.Error())
+					log.Flush()
+					continue
+				}
+
+				manager.SetPlayerPositionMap(pps)
+				neap := manager.ExistActivePlayer()
+				if existActivePlayer != neap {
+					var replicas int32
+					if neap {
+						replicas = 1
 					}
 
-					p, err := getPlayerPositions(log, ProjectID)
+					log.Infof("try update land replica size = %d", replicas)
+					err := updateReplicas("default", "land", replicas)
 					if err != nil {
-						log.Errorf("failed getPlayerPositions from Firestore. err = %s", err.Error())
+						log.Errorf("failed update land replica size. %+v", err)
+						log.Flush()
+						continue
 					}
-					ppm.Map = p
-					b := ppm.existActivePlayer()
-					if b {
-						// TODO Run Land Container
-						log.Info("Start Container")
-					} else {
-						// TODO Stop Land Conainer
-						log.Info("Stop Container")
-					}
-				}(&log)
+					existActivePlayer = neap
+				}
+
+				// debug log
+				j, err := json.Marshal(pps)
+				if err != nil {
+					log.Errorf("json.Marshal. %s", err.Error())
+					log.Flush()
+				}
+				log.Infof(string(j))
 				log.Flush()
 			}
 		}
 	}
-}
-
-// getPlayerPositions is FirestoreからPlayerPositionを取得する
-// TODO Firestore周りは後で別パッケージに分けて、Mockを用意したほうがいいかも
-func getPlayerPositions(log *slog.Log, projectID string) (map[string]PlayerPosition, error) {
-	ctx := context.Background()
-	client, err := firestore.NewClient(ctx, projectID)
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
-
-	ppm := map[string]PlayerPosition{}
-	// FIXME world name
-	iter := client.Collection("world-default-player-position").Documents(ctx)
-	for {
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-		var pp PlayerPosition
-		err = doc.DataTo(&pp)
-		if err != nil {
-			return nil, err
-		}
-		pp.ID = doc.Ref.ID
-		ppm[pp.ID] = pp
-	}
-
-	return ppm, nil
 }
