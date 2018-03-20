@@ -9,7 +9,7 @@ steps:
   args: ['test', '.']
   env: ['PROJECT_ROOT=github.com/metal-tile/godeye']
 - name: 'gcr.io/cloud-builders/go'
-  args: ['install', '-a', '-ldflags', "'-s'", '-installsuffix', 'cgo', 'github.com/metal-tile/godeye']
+  args: ['install', '-a', '-ldflags', '-s', '-installsuffix', 'cgo', 'github.com/metal-tile/godeye']
   env: [
     'PROJECT_ROOT=github.com/metal-tile/godeye',
     'CGO_ENABLED=0',
