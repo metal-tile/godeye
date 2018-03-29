@@ -42,7 +42,7 @@ func main() {
 	}
 
 	for {
-		t := time.NewTicker(5 * time.Minute)
+		t := time.NewTicker(10 * time.Second) // TODO 5 * time.Minute
 		for {
 			select {
 			case <-t.C:
