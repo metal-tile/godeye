@@ -36,16 +36,18 @@ func (ppm *PlayerPositionManager) existActivePlayer() bool {
 }
 
 func main() {
-	err := updateReplicas("default", "land-node", 0)
-	if err != nil {
-		fmt.Printf("error:%+v\n", err)
-	}
-
 	for {
 		t := time.NewTicker(10 * time.Second) // TODO 5 * time.Minute
 		for {
 			select {
 			case <-t.C:
+				err := updateReplicas("default", "land-node", 1)
+				if err != nil {
+					fmt.Printf("error:%+v\n", err)
+					continue
+				}
+				fmt.Println("done updateReplicas.")
+
 				log := slog.Start(time.Now())
 				go func(log *slog.Log) {
 					ppm := PlayerPositionManager{
