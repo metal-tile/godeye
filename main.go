@@ -36,7 +36,7 @@ func (ppm *PlayerPositionManager) existActivePlayer() bool {
 }
 
 func main() {
-	err := updateReplicas("default", "land", 0)
+	err := updateReplicas("default", "land-node", 0)
 	if err != nil {
 		fmt.Printf("error:%+v\n", err)
 	}
