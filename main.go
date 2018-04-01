@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -36,18 +35,12 @@ func (ppm *PlayerPositionManager) existActivePlayer() bool {
 }
 
 func main() {
+	crs := 0
 	for {
-		t := time.NewTicker(10 * time.Second) // TODO 5 * time.Minute
+		t := time.NewTicker(5 * time.Minute)
 		for {
 			select {
 			case <-t.C:
-				err := updateReplicas("default", "land-node", 1)
-				if err != nil {
-					fmt.Printf("error:%+v\n", err)
-					continue
-				}
-				fmt.Println("done updateReplicas.")
-
 				log := slog.Start(time.Now())
 				go func(log *slog.Log) {
 					ppm := PlayerPositionManager{
@@ -60,12 +53,18 @@ func main() {
 					}
 					ppm.Map = p
 					b := ppm.existActivePlayer()
+					nrs := 0
 					if b {
-						// TODO Run Land Container
-						log.Info("Start Container")
-					} else {
-						// TODO Stop Land Conainer
-						log.Info("Stop Container")
+						nrs = 1
+					}
+					if crs != nrs {
+						log.Infof("Update land-node Replicas %d -> %d", crs, nrs)
+						err := updateReplicas("default", "land-node", int32(nrs))
+						if err != nil {
+							log.Errorf("error:%+v\n", err)
+							return
+						}
+						crs = nrs
 					}
 				}(&log)
 				log.Flush()
@@ -102,6 +101,7 @@ func getPlayerPositions(log *slog.Log, projectID string) (map[string]PlayerPosit
 		}
 		pp.ID = doc.Ref.ID
 		ppm[pp.ID] = pp
+		// FIXME UpdatedAt を更新処理がないので、必ず人がいるとみなされる
 	}
 
 	return ppm, nil
