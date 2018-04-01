@@ -19,14 +19,14 @@ func updateReplicas(namespace string, name string, replicas int32) error {
 		return errors.Wrap(err, "failed kubernetes.NewForConfig")
 	}
 
-	deployment, err := clientset.AppsV1beta2().Deployments(namespace).Get(name, metav1.GetOptions{})
+	deployment, err := clientset.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		fmt.Printf("failed get Deployment %+v\n", err)
 		return errors.Wrap(err, "failed get deployment")
 	}
 	deployment.Spec.Replicas = &replicas
 	fmt.Printf("Deployment %v\n", deployment)
-	ug, err := clientset.AppsV1beta2().Deployments(deployment.Namespace).Update(deployment)
+	ug, err := clientset.AppsV1().Deployments(deployment.Namespace).Update(deployment)
 	if err != nil {
 		fmt.Printf("failed update Deployment %+v", err)
 		return errors.Wrap(err, "failed update Deployment")
